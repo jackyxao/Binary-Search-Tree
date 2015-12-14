@@ -1,0 +1,1021 @@
+// The "BinarySearchTreeTest" class.
+//Input:    None
+//Output:   None
+//Purpose:  To run given main.
+//Date: January 21 2015
+//Additional methods added by Jacky Xao
+import hsa.*;
+import java.util.*;
+
+class BinarySearchTreeTest
+{
+    static Console c = new Console (35,80);
+
+    public static void main (String[] args)
+    {
+	int value;
+	String order;
+	int choice = 1;
+	int lvl;
+	Node sibling;
+	BinarySearchTree bst = new BinarySearchTree();
+	while (choice > 0)
+	    {
+	    c.println("---------------Binary-Search-Tree----------------------");
+	    c.println("");
+	    bst.printTree(c);
+	    c.println("");
+	    c.println("What would you like to do?");
+	    c.println("1: Add a value                  2: Delete a value");
+	    c.println("3: View tree in pre-order       4: View tree in post-order");
+	    c.println("5: View tree in in-order        6: View tree in breadth order");
+	    c.println("7: Find the level of a value    8: Find a sibling of a value");
+	    c.println("9: View Information on the tree");
+	    c.println("10: Balance the tree");
+	    c.println("11: Bulk add to the tree");
+	    c.print("0: [Exit] |_>: ");
+	    choice = c.readInt();
+	    while (choice < 0 || choice > 11)
+		{
+		c.print("Invalid choice. [0-11] |_>: ");
+		choice = c.readInt();
+		}
+	    c.println("");
+	    if (choice == 1)
+		{
+		c.print("Enter an integer: ");
+		value = c.readInt();
+		if (!bst.add(value))
+		    {
+		    c.println("Value already exist in the tree.");
+		    c.println("Hit any character to continue");
+		    c.getChar();
+		    }
+		}
+	    if (choice == 2) 
+		{
+		c.print("Enter the integer to delete: ");
+		value = c.readInt();
+		if (!bst.delete(value))
+		    {
+		    c.println("Deletion unsuccessful.");
+		    c.println("Hit any character to continue");
+		    c.getChar();
+		    }
+		}
+	    else if (choice == 3)
+		{
+		c.println("Pre Order:");
+		order = bst.preOrder();
+		if (order.length() == 0)
+		    c.println("Empty");
+		else
+		    c.println(order);
+		}
+	    else if (choice == 4)
+		{
+		c.println("Post Order:");
+		order = bst.postOrder();
+		if (order.length() == 0)
+		    c.println("Empty");
+		else
+		    c.println(order);
+		}
+	    else if (choice == 5)
+		{
+		c.println("In Order:");
+		order = bst.inOrder();
+		if (order.length() == 0)
+		    c.println("Empty");
+		else
+		    c.println(order);
+		}
+	    else if (choice == 6)
+		{
+		c.println("Breadth Order:\n"+bst.breadthFirstOrder());
+		}
+	    else if (choice == 7)
+		{
+		c.print("Enter an integer: ");
+		value = c.readInt();
+		lvl = bst.level(value);
+		if (lvl == -1)
+		    c.println("["+value+"] does not exist in this tree");
+		else
+		    c.println("["+value+"] is located on level "+lvl);
+		}
+	    else if (choice == 8)
+		{
+		c.print("Enter an integer: ");
+		value = c.readInt();
+		sibling = bst.sibling(value);
+		if (bst.find(value) == null)
+		    c.println("["+value+"] does not exist in this tree");
+		else if (sibling == null)
+		    c.println("["+value+"] has no siblings");
+		else
+		    c.println("["+sibling.data+"] is a sibling of "+value);
+		}
+	    else if (choice == 9)
+		{   
+		c.println("There are "+bst.nodes()+" node(s) in this tree");
+		if (bst.perfectlyBalanced())
+		    c.println("The tree is perfectly balanced.");
+		else
+		    c.println("The tree is not perfectly balanced.");
+		c.println("The height of the tree is "+bst.height());
+		if (bst.heightBalanced())
+		    c.println("The tree is height balanced.");
+		else
+		    c.println("The tree is not height balanced.");
+		}
+	    else if (choice == 10)
+		{
+		bst.balance();
+		}
+	    else if (choice == 11)
+		{
+		c.print("Enter the integers you wish to add. Seperate them by a space.\n> ");
+		order = c.readLine();
+		bst.bulkAdd(order);
+		}
+	    if (choice > 2 && choice < 10)
+		{
+		c.println("Hit any character to continue");
+		c.getChar();
+		}
+	    c.clear();
+	    }
+	c.println("Goodbye");
+    }
+}
+
+//Class Node
+//Fields:   int data    -   the information held by the Node
+//          Node right  -   the next node to the right of the tree
+//          Node left   -   the next node to the left of the tree
+class Node
+{
+    public int data;
+    public Node left;
+    public Node right;
+
+    public Node (int info)
+    {
+	this.data = info;
+	this.left = null;
+	this.right = null;
+    }
+
+
+    public Node ()
+    {
+	this (0);
+    }
+    
+    public String toString()
+	/*Author: Jacky Xao
+	  Date: January 17 2015
+	  Purpose: helps with debugging
+	  Input: N/A
+	  Output: the data */
+	{
+	return (""+this.data);
+	}
+}
+//Class QNode
+//Fields:   Node data   -   the information held by the QNode
+//          QNode next  -   the next node in the list
+class QNode
+{
+    public Node data;
+    public QNode next;
+
+    public QNode (Node info)
+    {
+	this.data = info;
+	this.next = null;
+    }
+
+
+    public QNode ()
+    {
+	this (null);
+    }
+}
+
+//Class Queue
+//Fields:   QNode front -   the front of the queue
+//          QNode back  -   the back of the queue
+//Methods:  add     -   adds a given node to the Queue
+//          remove  -   removes a node at the front and returns removed node
+//          empty   -   returns true if queue is empty
+class Queue
+{
+    public QNode front;
+    public QNode back;
+
+    public Queue ()
+    {
+	this.front = null;
+	this.back = null;
+    }
+
+
+    //add
+    //Purpose:      adds a node at the end of the queue
+    //Parameters:   Node x   -   the node being added
+    //Output:       None
+    public void add (Node x)
+    {
+	if (this.isEmpty ())
+	{
+	    this.front = new QNode(x);
+	    this.back = this.front;
+	}
+	else
+	{
+	    this.back.next = new QNode(x);
+	    this.back = this.back.next;
+	}
+    }
+
+
+    //remove
+    //Purpose:      removes a node at the front of the queue
+    //Parameters:   None
+    //Output:       the node that was removed
+    public Node remove ()
+    {
+	Node ans;
+
+	ans = this.front.data;
+	this.front = this.front.next;
+	return ans;
+    }
+
+
+    //isEmpty
+    //Purpose:      returns true if array is empty
+    //Parameters:   None
+    //Output:       true or false
+    public boolean isEmpty ()
+    {
+	boolean status = false;
+	if (this.front == null)
+	    status = true;
+	return status;
+    }
+}
+
+//Class BinarySearchTree
+//Fields:   Node root           -   the root of the tree
+//Methods:  add                 -   adds a leaf to the tree with given info
+//          find                -   returns the node with the given information
+/*Addition Methods-------------------------------------------------------------
+Date: January 17 2015
+Author: Jacky Xao*
+	Dustin Hu helped with rotateLeft & rotateRight
+Methods:
+    preOrder: gets the pre-order of the tree
+    rpreOrder: protected, recursivly traverse in pre-order
+    postOrder: gets the post-order of the tree
+    rpostOrder: protected, recursivly traverse in post-order
+    inOrder: gets the in-order of the tree
+    rinOrder: protected, recursivly traverse in in-order
+    height: returns height of the tree
+    rheight: protected, recursivly find the height of the tree 
+	     starting at given node
+    nodes: returns number of nodes in the tree
+    rnodes: protected, recursivly find the number of nodes in the tree
+	    starting at given node
+    perfectlyBalanced: is the tree perfectly balanced?
+    rperfectlyBalanced: recursivly checks each branch for perf. balanced
+    heightBalanced: is the tree height balanced?
+    rheightBalanced: recursivly checks each branch for height balanced
+    level: returns the level of a given int
+    sibling: returns the node of the sibling of the given int
+    breadthFirstOrder: gets the breadth order of the tree
+    delete: deletes a node from the tree
+    ===========================================================================
+    rotateLeft: rotates the pivot to the left given integer
+    rotateRight: rotates the pivot to the right given integer
+		 *both rotates are overloaded for Node input as well, protected
+    balance: height balances the tree
+    rbalance: balances the tree starting at node given by calling rotateL/R
+    bulkAdd: adds to the tree from a string of input integers
+	     for adding to a tree quickly, delimited by spaces
+-------------------------------------------------------------------------------
+*/
+class BinarySearchTree
+{
+    protected Node root;
+
+    public BinarySearchTree ()
+    {
+	root = null;
+    }
+
+
+    //add
+    //Purpose:      adds a leaf to the tree
+    //Parameters:   int x   -   the info of the leaf being added
+    //Output:       true or false
+    public boolean add (int info)
+    {
+	
+	if (this.root == null)
+	    this.root = new Node (info);
+	else
+	{
+	    Node ptr = this.root;
+	    while (ptr != null)
+	    {
+		if (info < ptr.data)
+		    if (ptr.left != null)
+			ptr = ptr.left;
+		    else
+		    {
+			ptr.left = new Node (info);
+			return true;
+		    }
+		else if (info > ptr.data)
+		    if (ptr.right != null)
+			ptr = ptr.right;
+		    else
+		    {
+			ptr.right = new Node (info);
+			return true;
+		    }
+		else if (info == ptr.data)
+		{
+		    return false;
+		}
+	    }
+	}
+	return true;
+    }
+
+
+    //find
+    //Purpose:      finds the node with the given information
+    //Parameters:   int x   -   the info of the node that is being looked for
+    //Output:       returns the node with the given information
+    public Node find (int x)
+    {
+	Node ptr;
+	ptr = this.root;
+	while (ptr != null && ptr.data != x)
+	    if (x < ptr.data)
+		ptr = ptr.left;
+	    else
+		ptr = ptr.right;
+	return ptr;
+    }
+
+
+    /************************************************
+    Method:printTree
+    Purpose:Prints the tree in a normal way.
+	(Can't handle super wide trees.)
+	-  Developed by Jonathan Chan, May 1997
+	-  Java version by Edmund Wong, Dec 2000
+	-  Modified by Ian Halliday, June 2001
+    Parameters: The Console
+    Return Value: None
+    *************************************************/
+    public void printTree (Console c)
+    {
+	c.setCursor
+	    (rprintTree (c, root, c.getRow ()), 1);
+    }
+
+
+    /************************************************
+    Method: rprintTree
+    Purpose: See above.
+    Parameters: the console, the node being printed
+		and the row to print on
+    Return Value: The maximum row reached by
+		  printing (allowing for useful
+		  cursor placement)
+    *************************************************/
+    protected int rprintTree (Console c, Node n, int r)
+    {
+	int maxRow;
+	if (n != null)
+	{
+	    maxRow = rprintTree (c, n.left, r + 2);
+	    c.setCursor (r, c.getColumn ());
+	    c.print (n.data, 3);
+	    maxRow = Math.max (maxRow, rprintTree (c, n.right, r + 2));
+	    return maxRow;
+	}
+	return r - 1;
+    }
+
+//-----------------------------------------------------------------------------
+    public String preOrder()
+	/*Author: Jacky Xao
+	  Date: January 17 2015
+	  Purpose: gets the pre-order of the tree
+	  Input: N/A
+	  Output: the pre-order */
+	{
+	return rpreOrder(root);
+	}
+	
+    public String rpreOrder(Node n)
+	/*Author: Jacky Xao
+	  Date: January 17 2015
+	  Purpose: protected, recursivly traverse in pre-order
+	  Input: starting node (n)
+	  Output: the pre-order starting at n */
+	{
+	String preO = "";
+	if (n != null)
+	    {
+	    preO = preO + n.data + " ";
+	    preO = preO + rpreOrder(n.left);
+	    preO = preO + rpreOrder(n.right);
+	    }
+	return preO;
+	}
+	
+    public String postOrder()
+	/*Author: Jacky Xao
+	  Date: January 17 2015
+	  Purpose: gets the post-order of the tree
+	  Input: N/A
+	  Output: the post-order */
+	{
+	return rpostOrder(root);
+	}
+	
+    public String rpostOrder(Node n)
+	/*Author: Jacky Xao
+	  Date: January 17 2015
+	  Purpose: protected, recursivly traverse in post-order
+	  Input: starting node (n)
+	  Output: the post-order starting at n */
+	{
+	String postO = "";
+	if (n != null)
+	    {
+	    postO = postO + rpostOrder(n.left);
+	    postO = postO + rpostOrder(n.right);
+	    postO = postO + n.data + " ";
+	    }
+	return postO;
+	}
+	
+    public String inOrder()
+	/*Author: Jacky Xao
+	  Date: January 17 2015
+	  Purpose: gets the in-order of the tree
+	  Input: N/A
+	  Output: the in-order */
+	{
+	return rinOrder(root);
+	}
+	
+    public String rinOrder(Node n)
+	/*Author: Jacky Xao
+	  Date: January 17 2015
+	  Purpose: protected, recursivly traverse in in-order
+	  Input: starting node (n)
+	  Output: the in-order starting at n */
+	{
+	String inO = "";
+	if (n != null)
+	    {
+	    inO = inO + rinOrder(n.left);
+	    inO = inO + n.data + " ";
+	    inO = inO + rinOrder(n.right);
+	    }
+	return inO;
+	}
+	
+    public int height()
+	/*Author: Jacky Xao
+	  Date: January 17 2015
+	  Purpose: returns height of the tree
+	  Input: N/A
+	  Output: the height */
+	{
+	return rheight(this.root);
+	}
+	
+   protected int rheight(Node walk)
+	/*Author: Jacky Xao
+	  Date: January 17 2015
+	  Purpose: recursivly find the height of the tree 
+		   starting at given node
+	  Input: starting node (walk)
+	  Output: the height of the tree at walk */
+	{
+	int h = 0;
+	if (walk != null)
+	    {
+	    int hL = rheight(walk.left);
+	    int hR = rheight(walk.right);
+	    if (hL > hR)
+		h = hL + 1;
+	    else
+		h = hR + 1;
+	    }
+	return h;
+	}
+    
+    public int nodes()
+	/*Author: Jacky Xao
+	  Date: January 17 2015
+	  Purpose: returns number of nodes in the tree
+	  Input: N/A
+	  Output: the number of nodes */
+	{
+	return rnodes(this.root);
+	}
+	
+    public int rnodes(Node walk)
+	/*Author: Jacky Xao
+	  Date: January 17 2015
+	  Purpose: recursivly find the number of nodes in the tree
+		   starting at given node
+	  Input: starting node (walk)
+	  Output: the number of nodes starting at walk */
+	{
+	int num = 0;
+	if (walk != null)
+	    {
+	    num += rnodes(walk.left);
+	    num += rnodes(walk.right);
+	    num += 1;
+	    }
+	return num;
+	}
+	
+    public boolean perfectlyBalanced()
+	/*Author: Jacky Xao
+	  Date: January 17 2015
+	  Purpose: is the tree perfectly balanced?
+	  Input: N/A
+	  Output: true if balanced, false otherwise */
+	{
+	return rperfectlyBalanced(this.root);
+	}
+	
+    protected boolean rperfectlyBalanced(Node walk)
+	/*Author: Jacky Xao
+	  Date: January 17 2015
+	  Purpose: recursivly checks each branch for perf. balanced
+	  Input: starting node (walk)
+	  Output: true if balanced, false otherwise */
+	{
+	boolean perf = true;
+	if (walk != null)
+	    {
+	    int nL = rnodes(walk.left);
+	    int nR = rnodes(walk.right);
+	    if (!((Math.abs(nL - nR) <= 1) && (rperfectlyBalanced(walk.left)
+		&& rperfectlyBalanced(walk.right))))
+		perf = false;
+	    }
+	return perf;
+	}
+	
+    public boolean heightBalanced()
+	/*Author: Jacky Xao
+	  Date: January 17 2015
+	  Purpose: is the tree height balanced?
+	  Input: N/A
+	  Output: true if balanced, false otherwise */
+	{
+	return rheightBalanced(this.root);
+	}
+	
+    protected boolean rheightBalanced(Node walk)
+	/*Author: Jacky Xao
+	  Date: January 17 2015
+	  Purpose: recursivly checks each branch for height balanced
+	  Input: starting node (walk)
+	  Output: true if balanced, false otherwise */
+	{
+	boolean perf = true;
+	if (walk != null)
+	    {
+	    int hL = rheight(walk.left);
+	    int hR = rheight(walk.right);
+	    if (!((Math.abs(hL - hR) <= 1) && (rheightBalanced(walk.left)
+		&& rheightBalanced(walk.right))))
+		perf = false;
+	    }
+	return perf;
+	}
+	
+    public int level(int number)
+	/*Author: Jacky Xao
+	  Date: January 17 2015
+	  Purpose: returns the level of a given int
+	  Input: int (number)
+	  Output: returns the level of a given int, -1 if not found*/
+	{
+	int lvl = 0;
+	boolean loop = true;
+	Node walk = this.root;
+	if (this.find(number) == null)
+	    lvl = -1;
+	else 
+	    while (loop)
+		{
+		if (number == walk.data)
+		    {
+		    loop = false;
+		    }
+		else if (number < walk.data)
+		    {
+		    if (walk.left == null)
+			{
+			lvl = -1;
+			loop = false;
+			}
+		    else
+			{
+			walk = walk.left;
+			lvl++;
+			}
+		    }
+		else if (number > walk.data)
+		    {
+		    if (walk.right == null)
+			{
+			lvl = -1;
+			loop = false;
+			}
+		    else
+			{
+			walk = walk.right;
+			lvl++;
+			}
+		    }
+		}
+	return lvl;
+	}
+    
+    public Node sibling(int num)
+	/*Author: Jacky Xao
+	  Date: January 17 2015
+	  Purpose: returns the node of the sibling of the given int
+	  Input: int (num)
+	  Output: returns the node of the sibling of the given int, null if not found*/
+	{
+	Node sib = null;
+	Node walk;
+	boolean loop = true;
+	if (this.find(num) != null) //num does exist
+	    {
+	    if (this.root.data != num) //Not the root
+		{
+		walk = this.root;
+		while (loop)
+		    {
+		    if (num > walk.data)
+			{
+			if (num == walk.right.data)
+			    {
+			    loop = false;
+			    sib = walk.left;
+			    }
+			else
+			    walk = walk.right;
+			}
+		    else //Since it's for sure that num exist
+			{
+			if (num == walk.left.data)
+			    {
+			    loop = false;
+			    sib = walk.right;
+			    }
+			else
+			    walk = walk.left;
+			}
+		    }
+		}
+	    }
+	return sib;
+	}
+	
+    public String breadthFirstOrder()
+	/*Author: Jacky Xao
+	  Date: January 17 2015
+	  Purpose: gets the breadth order of the tree 
+	  Input: N/A
+	  Output: the breadth order */
+	{
+	String breO = "Empty";
+	Queue breOrder = new Queue();
+	Node temp;
+	if (this.root != null)
+	    {
+	    breO = "";
+	    breOrder.add(this.root);
+	    while (!breOrder.isEmpty())
+		{
+		temp = breOrder.remove();
+		breO = breO + temp.data + " ";
+		if (temp.left != null)
+		    breOrder.add(temp.left);
+		if (temp.right != null)
+		breOrder.add(temp.right);
+		}
+	    }
+	return breO;
+	}
+	
+    public boolean delete(int num)
+	/*Author: Jacky Xao
+	  Date: January 21 2015
+	  Purpose: deletes a node
+	  Input: the integer to delete
+	  Output: true if successful deletion */
+	{
+	boolean del = false;
+	Node parent = this.root; //Parent of found
+	Node found = this.find(num); //Node to be deleted
+	Node parent2;
+	Node promote;
+	Node walk;
+	boolean loop = true;
+	if (found != null)
+	    {
+	    del = true;
+	    while (loop) //Finds the parent
+		{
+		if (num > parent.data)
+		    if (num == parent.right.data)
+			loop = false;
+		    else
+			parent = parent.right;
+		else if (num < parent.data)
+		    if (num == parent.left.data)
+			loop = false;
+		    else
+			parent = parent.left;
+		else //deleting the root
+		    {
+		    parent = null; 
+		    loop = false;
+		    }
+		}
+	    if (parent != null)
+		{
+		if (found.left == null && found.right == null) //Found = leaf
+		    if (parent.left == found)
+			parent.left = null;
+		    else
+			parent.right = null;
+		else if (found.left == null) //Found = 1 branch
+		    if (parent.left == found)
+			parent.left = found.right;
+		    else
+			parent.right = found.right;
+		else if (found.right == null) //Found = 1 branch
+		    if (parent.left == found)
+			parent.left = found.left;
+		    else
+			parent.right = found.left;
+		else
+		    {
+		    parent2 = found;
+		    promote = parent2.left;
+		    while (promote.right != null)
+			{
+			promote = promote.right;
+			if (parent2 == found)
+			    parent2 = parent2.left;
+			else
+			    parent2 = parent2.right;
+			}
+		    if (parent.right == found)
+			parent.right = promote;
+		    else
+			parent.left = promote;
+		    promote.right = found.right;
+		    parent2.right = null;
+		    walk = promote; //Might be error in walk
+		    while (walk.left != null)
+			walk = walk.left;
+		    if (walk != found.left && found.left != promote)
+			walk.left = found.left;
+		    }
+		}
+	    else //Deleting the root
+		{
+		if (this.root.left == null && this.root.right == null)
+		    this.root = null;
+		else if (this.root.right == null)
+		    this.root = this.root.left;
+		else if (this.root.left == null)
+		    this.root = this.root.right;
+		else
+		    {
+		    parent2 = found;
+		    promote = parent2.left;
+		    while (promote.right != null)
+			{
+			promote = promote.right;
+			if (parent2 == found)
+			    parent2 = parent2.left;
+			else
+			    parent2 = parent2.right;
+			}
+		    this.root = promote;
+		    promote.right = found.right;
+		    parent2.right = null;
+		    walk = promote;
+		    while (walk.left != null)
+			walk = walk.left;
+		    if (walk != found.left && found.left != promote)
+			walk.left = found.left;
+		    }
+		}
+	    }
+	return del;
+	}
+//=====================================================================================
+    public void bulkAdd(String input)
+	/*Author: Jacky Xao
+	  Date: January 20 2015
+	  Purpose: adds to the tree from a string of input integers
+		   for adding to a tree quickly, delimited by spaces
+	  Input: string of integers
+	  Output: N/A*/
+	{
+	int index;
+	if (input.length() != 0)
+	    {
+	    index = input.indexOf(" ");
+	    while (index != -1)
+		{
+		input = input.trim();
+		this.add(Integer.parseInt(input.substring(0,index)));
+		input = input.substring(index+1);
+		index = input.indexOf(" ");
+		}
+	    this.add(Integer.parseInt(input));
+	    }
+	} 
+    public boolean rotateLeft(int pivot)
+	/*Author: Jacky Xao
+	  Date: January 20 2015
+	  Purpose: rotate the pivot to the left
+	  Input: integer of the pivot
+	  Output: true if successful rotation */
+	{
+	return this.rotateLeft(this.find(pivot));
+	}
+	
+    protected boolean rotateLeft(Node pivot) 
+	/*Author: Dustin Hu & Jacky Xao
+	  Date: January 20 2015
+	  Purpose: rotate the pivot to the left
+	  Input: Node of the pivot point
+	  Output: true if successful rotation */
+	{
+	boolean rotate = false;
+	if (pivot != null && pivot.right != null)
+	    {
+	    rotate = true;
+	    boolean loop = true;
+	    Node newRoot = pivot.right;
+	    Node pivotNewRight = newRoot.left;
+	    newRoot.left = pivot;
+	    pivot.right = pivotNewRight;
+	    if (pivot == this.root)
+		{
+		this.root = newRoot;
+		}
+	    else
+		{
+		Node parent = this.root;
+		while (loop) //Finds the parent
+		    {
+		    if (pivot.data > parent.data)
+			if (pivot.data == parent.right.data)
+			    loop = false;
+			else
+			    parent = parent.right;
+		    else if (pivot.data < parent.data)
+			if (pivot.data == parent.left.data)
+			    loop = false;
+			else
+			    parent = parent.left;
+		    else
+			parent = null; //Pivot = Root/Parent
+		    }
+		if (pivot.data > parent.data)
+		    parent.right = newRoot;
+		else
+		    parent.left = newRoot;
+		}
+	    }
+	return rotate;
+	}
+	
+    public boolean rotateRight(int pivot)
+	/*Author: Jacky Xao
+	  Date: January 20 2015
+	  Purpose: rotate the pivot to the right
+	  Input: integer of the pivot
+	  Output: true if successful rotation */
+	{
+	return this.rotateRight(this.find(pivot));
+	}
+	
+    protected boolean rotateRight(Node pivot) 
+	/*Author: Dustin Hu & Jacky Xao
+	  Date: January 20 2015
+	  Purpose: rotate the pivot to the right
+	  Input: Node of the pivot point
+	  Output: true if successful rotation */
+	{
+	boolean rotate = false;
+	if (pivot != null && pivot.left != null)
+	    {
+	    rotate = true;
+	    boolean loop = true;
+	    Node newRoot = pivot.left;
+	    Node pivotNewLeft = newRoot.right;
+	    newRoot.right = pivot;
+	    pivot.left = pivotNewLeft;
+	    if (pivot == this.root)
+		{
+		this.root = newRoot;
+		}
+	    else
+		{
+		Node parent = this.root;
+		while (loop) //Finds the parent
+		    {
+		    if (pivot.data > parent.data)
+			if (pivot.data == parent.right.data)
+			    loop = false;
+			else
+			    parent = parent.right;
+		    else if (pivot.data < parent.data)
+			if (pivot.data == parent.left.data)
+			    loop = false;
+			else
+			    parent = parent.left;
+		    else
+			parent = null; //Pivot = Root/Parent
+		    }
+		if (pivot.data > parent.data)
+		    parent.right = newRoot;
+		else
+		    parent.left = newRoot;
+		}
+	    }
+	return rotate;
+	}
+	
+    public void balance()
+	/*Author: Jacky Xao
+	  Date: January 21 2015
+	  Purpose: height balances the tree
+	  Input: N/A
+	  Output: N/A*/
+	{
+	this.rbalance(this.root);
+	}
+	
+    protected void rbalance(Node walk)
+	/*Author: Jacky Xao
+	  Date: January 20 2015
+	  Purpose: balances the tree starting at node given by calling rotateL/R
+	  Input: node to begin balancing
+	  Output: N/A*/
+	{
+	if (walk != null)
+	    {
+	    this.rbalance(walk.left);
+	    this.rbalance(walk.right);
+	    if ((rheight(walk.left) - rheight(walk.right)) > 1)
+		{
+		if (rheight(walk.left.left) < rheight(walk.left.right))
+		    this.rotateLeft(walk.left);
+		this.rotateRight(walk);
+		this.rbalance(walk);
+		}
+	    else if ((rheight(walk.right) - rheight(walk.left)) > 1)
+		{
+		if (rheight(walk.right.right) < rheight(walk.right.left))
+		    this.rotateRight(walk.right);
+		this.rotateLeft(walk);
+		this.rbalance(walk);
+		}
+	    }
+	}
+}
+
+
